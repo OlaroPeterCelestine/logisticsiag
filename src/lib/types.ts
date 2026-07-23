@@ -145,3 +145,45 @@ export interface TimelineEvent {
   done: boolean;
   current?: boolean;
 }
+
+export type CodLedgerStatus =
+  | "to_collect"
+  | "collected"
+  | "remitted"
+  | "mismatch"
+  | "written_off";
+
+export interface CodLedgerEntry {
+  id: string;
+  deliveryId: string;
+  trackingCode: string;
+  riderName: string;
+  merchantName: string;
+  expected: number;
+  collected: number | null;
+  status: CodLedgerStatus;
+  updatedAt: string;
+  note?: string;
+}
+
+export type SettlementStatus = "draft" | "ready" | "paid";
+
+export interface SettlementRun {
+  id: string;
+  merchantId: string;
+  merchantName: string;
+  period: string;
+  orders: number;
+  gmv: number;
+  fees: number;
+  payout: number;
+  status: SettlementStatus;
+  dueAt: string;
+}
+
+export interface PodAttempt {
+  at: string;
+  method: "otp" | "photo";
+  result: "success" | "fail";
+  detail: string;
+}

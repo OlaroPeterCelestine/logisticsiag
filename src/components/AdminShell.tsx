@@ -2,6 +2,7 @@
 
 import { Sidebar } from "./Sidebar";
 import { Header } from "./Header";
+import { CommandPalette } from "./CommandPalette";
 
 export function AdminShell({
   children,
@@ -12,6 +13,7 @@ export function AdminShell({
 }) {
   return (
     <div className="min-h-screen bg-bg">
+      <CommandPalette />
       <Sidebar />
       <div className="pl-[260px]">
         <Header crumbs={crumbs} />

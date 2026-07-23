@@ -10,6 +10,7 @@ import {
   formatTime,
   formatUgx,
   getDelivery,
+  getPodAttempts,
   riders,
 } from "@/lib/data";
 import { DeliveryStatusBadge } from "@/components/StatusBadge";
@@ -202,6 +203,61 @@ export default function OrderDetailPage() {
         </div>
 
         <div className="space-y-4">
+          <Card title="POD evidence">
+            <div className="mb-3 flex flex-wrap gap-2 text-xs">
+              <span className="rounded-full bg-bg px-2.5 py-0.5 text-text-muted">
+                Method · {d.podMethod?.replace("_", " + ") ?? "n/a"}
+              </span>
+              <span
+                className={
+                  d.podVerified
+                    ? "rounded-full bg-green-muted px-2.5 py-0.5 text-green"
+                    : "rounded-full bg-bg-hover px-2.5 py-0.5 text-text-dim"
+                }
+              >
+                {d.podVerified ? "Verified" : "Pending"}
+              </span>
+            </div>
+            {getPodAttempts(d.id).length === 0 ? (
+              <p className="text-xs text-text-dim">
+                No POD attempts yet for this order.
+              </p>
+            ) : (
+              <ul className="space-y-2">
+                {getPodAttempts(d.id).map((a, i) => (
+                  <li
+                    key={`${a.at}-${i}`}
+                    className="flex gap-3 rounded-xl border border-border bg-bg/50 px-3 py-2.5"
+                  >
+                    <div
+                      className={
+                        a.result === "success"
+                          ? "mt-0.5 h-2 w-2 shrink-0 rounded-full bg-green"
+                          : "mt-0.5 h-2 w-2 shrink-0 rounded-full bg-red"
+                      }
+                    />
+                    <div className="min-w-0 flex-1">
+                      <div className="text-xs font-medium capitalize text-text">
+                        {a.method} · {a.result}
+                      </div>
+                      <div className="mt-0.5 text-[11px] text-text-muted">
+                        {a.detail}
+                      </div>
+                      <div className="mt-1 text-[10px] text-text-dim">
+                        {formatTime(a.at)}
+                      </div>
+                    </div>
+                    {a.method === "photo" && a.result === "success" && (
+                      <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg border border-border bg-bg-hover text-[10px] text-text-dim">
+                        IMG
+                      </div>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            )}
+          </Card>
+
           <Card title="Money & proof">
             <dl className="text-sm">
               <Row k="Delivery fee" v={formatUgx(d.fee)} />

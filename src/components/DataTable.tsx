@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   ArrowDownUp,
   ChevronDown,
@@ -31,6 +31,7 @@ type Props<T extends { id: string }> = {
   pageSize?: number;
   emptyMessage?: string;
   toolbarExtra?: React.ReactNode;
+  onSelectionChange?: (ids: string[]) => void;
 };
 
 export function DataTable<T extends { id: string }>({
@@ -44,6 +45,7 @@ export function DataTable<T extends { id: string }>({
   pageSize = 10,
   emptyMessage = "No rows found",
   toolbarExtra,
+  onSelectionChange,
 }: Props<T>) {
   const [query, setQuery] = useState("");
   const [type, setType] = useState(typeOptions?.[0]?.value ?? "all");
@@ -52,6 +54,10 @@ export function DataTable<T extends { id: string }>({
   const [sortKey, setSortKey] = useState<string | null>(null);
   const [sortDir, setSortDir] = useState<"asc" | "desc">("asc");
   const searchInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    onSelectionChange?.(Array.from(selected));
+  }, [selected, onSelectionChange]);
 
   const defaultType = typeOptions?.[0]?.value ?? "all";
   const filtersActive = query.trim().length > 0 || type !== defaultType;

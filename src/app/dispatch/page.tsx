@@ -29,10 +29,21 @@ export default function DispatchPage() {
     () => jobs.filter((d) => d.status === "pending"),
     [jobs],
   );
-  const available = riders.filter((r) =>
-    ["online", "on_delivery"].includes(r.status),
-  );
   const selected = jobs.find((d) => d.id === selectedId) ?? null;
+  const available = useMemo(() => {
+    if (!selected) return [];
+    return riders
+      .filter((r) => ["online", "on_delivery"].includes(r.status))
+      .map((r) => {
+        const zoneMatch = r.zone === selected.zone ? 40 : 0;
+        const capacity = Math.max(0, r.maxJobs - r.activeJobs) * 12;
+        const rating = r.rating * 8;
+        const loadPenalty = r.activeJobs * 6;
+        const score = zoneMatch + capacity + rating - loadPenalty;
+        return { rider: r, score };
+      })
+      .sort((a, b) => b.score - a.score);
+  }, [selected]);
 
   function assign(rider: Rider) {
     if (!selected) return;
@@ -56,6 +67,100 @@ export default function DispatchPage() {
     );
     setSelectedId(next?.id ?? null);
   }
+
+  function unassign(id: string) {
+    setJobs((prev) =>
+      prev.map((d) =>
+        d.id === id
+          ? {
+              ...d,
+              status: "pending",
+              riderId: null,
+              riderName: null,
+              etaMins: null,
+            }
+          : d,
+      ),
+    );
+    setToast("Order returned to unassigned queue");
+    setTimeout(() => setToast(null), 2200);
+  }
+
+  const liveColumns: DataTableColumn<Delivery>[] = useMemo(
+    () => [
+      {
+        key: "id",
+        header: "Order ID",
+        sortable: true,
+        sortValue: (d) => d.trackingCode,
+        render: (d) => (
+          <IdPill href={`/deliveries/${d.id}`}>{d.trackingCode}</IdPill>
+        ),
+      },
+      {
+        key: "customer",
+        header: "Customer",
+        render: (d) => (
+          <span className="text-xs text-text">{d.customer}</span>
+        ),
+      },
+      {
+        key: "priority",
+        header: "Priority",
+        render: (d) => <PriorityBars level={d.priority} />,
+      },
+      {
+        key: "rider",
+        header: "Assigned to",
+        render: (d) => (
+          <AssigneeCell
+            name={d.riderName}
+            color={riders.find((r) => r.id === d.riderId)?.avatarColor}
+          />
+        ),
+      },
+      {
+        key: "status",
+        header: "Status",
+        render: (d) => (
+          <StatusCell
+            label={statusLabel(d.status)}
+            tone={
+              d.status === "in_transit" || d.status === "picked_up"
+                ? "accent"
+                : "blue"
+            }
+          />
+        ),
+      },
+      {
+        key: "eta",
+        header: "ETA / SLA",
+        render: (d) => (
+          <div className="flex flex-col gap-1">
+            <span
+              className={
+                (d.etaMins ?? 0) > 30
+                  ? "text-xs font-medium text-red"
+                  : "text-xs text-text-muted"
+              }
+            >
+              {d.etaMins != null ? `${d.etaMins}m left` : "—"}
+            </span>
+            <button
+              type="button"
+              onClick={() => unassign(d.id)}
+              className="w-fit text-[10px] font-medium text-text-dim hover:text-accent"
+            >
+              Unassign
+            </button>
+          </div>
+        ),
+      },
+    ],
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [jobs],
+  );
 
   return (
     <AdminShell crumbs={[{ label: "Command" }, { label: "Dispatch" }]}>
@@ -163,16 +268,21 @@ export default function DispatchPage() {
           )}
         </Panel>
 
-        <Panel title="Assign rider" count={available.length}>
+        <Panel title="Suggested riders" count={available.length}>
           {!selected ? (
             <Empty text="Pick an order first" />
           ) : (
             <ul className="space-y-2">
-              {available.map((r) => (
+              {available.map(({ rider: r, score }, idx) => (
                 <li key={r.id}>
                   <button
                     onClick={() => assign(r)}
-                    className="flex w-full items-center gap-2.5 rounded-xl border border-border bg-bg/40 p-2.5 text-left transition hover:border-accent/50 hover:bg-accent-muted/40"
+                    className={cn(
+                      "flex w-full items-center gap-2.5 rounded-xl border p-2.5 text-left transition",
+                      idx === 0
+                        ? "border-accent bg-accent-muted/50 hover:bg-accent-muted"
+                        : "border-border bg-bg/40 hover:border-accent/50 hover:bg-accent-muted/40",
+                    )}
                   >
                     <div
                       className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-[10px] font-bold text-white"
@@ -184,11 +294,19 @@ export default function DispatchPage() {
                         .join("")}
                     </div>
                     <div className="min-w-0 flex-1">
-                      <div className="truncate text-xs font-semibold text-text">
-                        {r.name}
+                      <div className="flex items-center gap-2">
+                        <span className="truncate text-xs font-semibold text-text">
+                          {r.name}
+                        </span>
+                        {idx === 0 && (
+                          <span className="rounded-full bg-accent px-1.5 py-0.5 text-[9px] font-bold uppercase text-white">
+                            Best
+                          </span>
+                        )}
                       </div>
                       <div className="truncate text-[10px] text-text-dim">
-                        {r.zone} · {r.vehicle} · ★{r.rating}
+                        {r.zone} · {r.activeJobs}/{r.maxJobs} jobs · score{" "}
+                        {Math.round(score)}
                       </div>
                     </div>
                     <UserPlus className="h-4 w-4 shrink-0 text-accent" />
@@ -226,69 +344,6 @@ export default function DispatchPage() {
     </AdminShell>
   );
 }
-
-const liveColumns: DataTableColumn<Delivery>[] = [
-  {
-    key: "id",
-    header: "Order ID",
-    sortable: true,
-    sortValue: (d) => d.trackingCode,
-    render: (d) => (
-      <IdPill href={`/deliveries/${d.id}`}>{d.trackingCode}</IdPill>
-    ),
-  },
-  {
-    key: "customer",
-    header: "Customer",
-    render: (d) => (
-      <span className="text-xs text-text">{d.customer}</span>
-    ),
-  },
-  {
-    key: "priority",
-    header: "Priority",
-    render: (d) => <PriorityBars level={d.priority} />,
-  },
-  {
-    key: "rider",
-    header: "Assigned to",
-    render: (d) => (
-      <AssigneeCell
-        name={d.riderName}
-        color={riders.find((r) => r.id === d.riderId)?.avatarColor}
-      />
-    ),
-  },
-  {
-    key: "status",
-    header: "Status",
-    render: (d) => (
-      <StatusCell
-        label={statusLabel(d.status)}
-        tone={
-          d.status === "in_transit" || d.status === "picked_up"
-            ? "accent"
-            : "blue"
-        }
-      />
-    ),
-  },
-  {
-    key: "eta",
-    header: "ETA / SLA",
-    render: (d) => (
-      <span
-        className={
-          (d.etaMins ?? 0) > 30
-            ? "text-xs font-medium text-red"
-            : "text-xs text-text-muted"
-        }
-      >
-        {d.etaMins != null ? `${d.etaMins}m left` : "—"}
-      </span>
-    ),
-  },
-];
 
 function Panel({
   title,

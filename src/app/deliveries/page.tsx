@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useCallback, useState } from "react";
 import { AdminShell } from "@/components/AdminShell";
 import {
   AssigneeCell,
@@ -155,6 +156,24 @@ const columns: DataTableColumn<Delivery>[] = [
 ];
 
 export default function DeliveriesPage() {
+  const [selected, setSelected] = useState<string[]>([]);
+  const [toast, setToast] = useState<string | null>(null);
+  const onSelectionChange = useCallback((ids: string[]) => setSelected(ids), []);
+
+  function exportSelected() {
+    const rows = deliveries.filter((d) => selected.includes(d.id));
+    const csv = [
+      "tracking,customer,status,fee,cod",
+      ...rows.map(
+        (d) =>
+          `${d.trackingCode},${d.customer},${d.status},${d.fee},${d.codAmount}`,
+      ),
+    ].join("\n");
+    void navigator.clipboard.writeText(csv);
+    setToast(`Copied ${rows.length} orders to clipboard (CSV)`);
+    setTimeout(() => setToast(null), 2200);
+  }
+
   return (
     <AdminShell crumbs={[{ label: "Operations" }, { label: "Orders" }]}>
       <div className="mb-6 flex flex-wrap items-end justify-between gap-3">
@@ -182,6 +201,12 @@ export default function DeliveriesPage() {
         </div>
       </div>
 
+      {toast && (
+        <div className="mb-4 rounded-xl border border-green/30 bg-green-muted px-4 py-2.5 text-sm text-green">
+          {toast}
+        </div>
+      )}
+
       <DataTable
         title="All orders"
         rows={deliveries}
@@ -208,6 +233,18 @@ export default function DeliveriesPage() {
           return d.status === type;
         }}
         pageSize={10}
+        onSelectionChange={onSelectionChange}
+        toolbarExtra={
+          selected.length > 0 ? (
+            <button
+              type="button"
+              onClick={exportSelected}
+              className="rounded-full border border-border bg-bg px-3.5 py-2 text-xs font-medium text-text-muted hover:text-text"
+            >
+              Export {selected.length} CSV
+            </button>
+          ) : null
+        }
       />
     </AdminShell>
   );

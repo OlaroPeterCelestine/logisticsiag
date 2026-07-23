@@ -7,7 +7,6 @@ import {
   Map,
   Users,
   Package,
-  Search,
   Settings,
   Bike,
   Clock,
@@ -15,9 +14,11 @@ import {
   Store,
   MapPinned,
   LifeBuoy,
-  Plus,
+  Banknote,
+  Wallet,
 } from "lucide-react";
 import { cn } from "@/lib/cn";
+import { SearchTrigger } from "./CommandPalette";
 
 const sections = [
   {
@@ -32,7 +33,8 @@ const sections = [
     title: "Operations",
     items: [
       { href: "/deliveries", label: "Orders", icon: Package, badge: 5 },
-      { href: "/deliveries/new", label: "New order", icon: Plus },
+      { href: "/cod", label: "COD desk", icon: Banknote, badge: 2 },
+      { href: "/settlements", label: "Settlements", icon: Wallet },
       { href: "/riders", label: "Riders", icon: Users },
       { href: "/merchants", label: "Merchants", icon: Store },
       { href: "/zones", label: "Zones & hubs", icon: MapPinned },
@@ -66,16 +68,7 @@ export function Sidebar() {
       </div>
 
       <div className="px-4 pb-3">
-        <Link
-          href="/deliveries"
-          className="flex w-full items-center gap-2 border border-border px-3 py-2.5 text-left text-sm text-text-muted transition hover:border-accent/40 hover:text-text"
-        >
-          <Search className="h-4 w-4 shrink-0" />
-          <span className="flex-1">Search orders…</span>
-          <kbd className="border border-border bg-bg px-1.5 py-0.5 text-[10px] text-text-dim">
-            ⌘K
-          </kbd>
-        </Link>
+        <SearchTrigger />
       </div>
 
       <nav className="flex-1 overflow-y-auto px-3 pb-4">

@@ -1,10 +1,13 @@
 import type {
   Activity,
   AppNotification,
+  CodLedgerEntry,
   Delivery,
   Issue,
   Merchant,
+  PodAttempt,
   Rider,
+  SettlementRun,
   TimelineEvent,
   Zone,
 } from "./types";
@@ -847,4 +850,152 @@ export function formatTime(iso: string | null) {
     hour: "2-digit",
     minute: "2-digit",
   });
+}
+
+export const codLedger: CodLedgerEntry[] = [
+  {
+    id: "c1",
+    deliveryId: "d2",
+    trackingCode: "HAU-88426",
+    riderName: "Unassigned",
+    merchantName: "Acacia Mall Store",
+    expected: 85000,
+    collected: null,
+    status: "to_collect",
+    updatedAt: "2026-07-23T08:40:00",
+  },
+  {
+    id: "c2",
+    deliveryId: "d4",
+    trackingCode: "HAU-88424",
+    riderName: "Unassigned",
+    merchantName: "Tech Hub Co-working",
+    expected: 120000,
+    collected: null,
+    status: "to_collect",
+    updatedAt: "2026-07-23T08:28:00",
+  },
+  {
+    id: "c3",
+    deliveryId: "d6",
+    trackingCode: "HAU-88419",
+    riderName: "James Okello",
+    merchantName: "Village Market",
+    expected: 45000,
+    collected: 40000,
+    status: "mismatch",
+    updatedAt: "2026-07-23T07:30:00",
+    note: "Rider reported short cash · customer disputed change",
+  },
+  {
+    id: "c4",
+    deliveryId: "d5",
+    trackingCode: "HAU-88418",
+    riderName: "Sarah Nambi",
+    merchantName: "Cafe Javas",
+    expected: 32000,
+    collected: 32000,
+    status: "collected",
+    updatedAt: "2026-07-23T07:10:00",
+  },
+  {
+    id: "c5",
+    deliveryId: "d9",
+    trackingCode: "HAU-88412",
+    riderName: "David Kato",
+    merchantName: "Ntinda Pharmacy Depot",
+    expected: 78000,
+    collected: 78000,
+    status: "remitted",
+    updatedAt: "2026-07-22T18:00:00",
+  },
+];
+
+export const settlementRuns: SettlementRun[] = [
+  {
+    id: "s1",
+    merchantId: "m1",
+    merchantName: "Cafe Javas",
+    period: "Jul 14–20",
+    orders: 186,
+    gmv: 12400000,
+    fees: 1860000,
+    payout: 10540000,
+    status: "ready",
+    dueAt: "2026-07-24",
+  },
+  {
+    id: "s2",
+    merchantId: "m2",
+    merchantName: "Acacia Mall Store",
+    period: "Jul 21 (daily)",
+    orders: 42,
+    gmv: 3100000,
+    fees: 420000,
+    payout: 2680000,
+    status: "draft",
+    dueAt: "2026-07-23",
+  },
+  {
+    id: "s3",
+    merchantId: "m5",
+    merchantName: "Village Market",
+    period: "Jul 14–20",
+    orders: 98,
+    gmv: 5400000,
+    fees: 780000,
+    payout: 4620000,
+    status: "paid",
+    dueAt: "2026-07-21",
+  },
+  {
+    id: "s4",
+    merchantId: "m3",
+    merchantName: "Ntinda Pharmacy Depot",
+    period: "Jul 14–20",
+    orders: 64,
+    gmv: 8900000,
+    fees: 960000,
+    payout: 7940000,
+    status: "ready",
+    dueAt: "2026-07-24",
+  },
+];
+
+export function getPodAttempts(deliveryId: string): PodAttempt[] {
+  const d = getDelivery(deliveryId);
+  if (!d) return [];
+  if (d.podVerified) {
+    return [
+      {
+        at: "2026-07-23T07:02:00",
+        method: "otp",
+        result: "fail",
+        detail: "Wrong OTP · attempt 1",
+      },
+      {
+        at: "2026-07-23T07:03:00",
+        method: "otp",
+        result: "success",
+        detail: `OTP ${d.otp} verified`,
+      },
+      {
+        at: "2026-07-23T07:03:20",
+        method: "photo",
+        result: "success",
+        detail: "Doorstep photo · 1.2 MB",
+      },
+    ];
+  }
+  if (d.status === "in_transit" || d.status === "picked_up") {
+    return [
+      {
+        at: "2026-07-23T08:15:00",
+        method: "otp",
+        result: "fail",
+        detail: "Customer mistyped · attempt 1",
+      },
+    ];
+  }
+  return [];
 }
