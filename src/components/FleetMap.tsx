@@ -15,6 +15,12 @@ import type { Delivery, Rider } from "@/lib/types";
 
 const KAMPALA: [number, number] = [0.3476, 32.5825];
 
+/** Carto basemap — reliable on Vercel (OSM public tiles often blocked). */
+const TILE_URL =
+  "https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png";
+const TILE_ATTR =
+  '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>';
+
 function riderIcon(color: string) {
   return L.divIcon({
     className: "haula-map-marker",
@@ -41,8 +47,14 @@ function pinIcon(color: string) {
   });
 }
 
-function FitBounds({ points }: { points: Array<[number, number]> }) {
+function MapReady({ points }: { points: Array<[number, number]> }) {
   const map = useMap();
+
+  useEffect(() => {
+    const t = window.setTimeout(() => map.invalidateSize(), 80);
+    return () => window.clearTimeout(t);
+  }, [map]);
+
   useEffect(() => {
     if (points.length === 0) {
       map.setView(KAMPALA, 13);
@@ -54,7 +66,20 @@ function FitBounds({ points }: { points: Array<[number, number]> }) {
     }
     map.fitBounds(L.latLngBounds(points), { padding: [48, 48], maxZoom: 15 });
   }, [map, points]);
+
   return null;
+}
+
+function BaseTiles() {
+  return (
+    <TileLayer
+      attribution={TILE_ATTR}
+      url={TILE_URL}
+      subdomains="abcd"
+      maxZoom={20}
+      detectRetina
+    />
+  );
 }
 
 export function FleetMap({
@@ -91,19 +116,16 @@ export function FleetMap({
   return (
     <div
       className={className}
-      style={{ height, minHeight: 320, width: "100%" }}
+      style={{ height, minHeight: 320, width: "100%", position: "relative" }}
     >
       <MapContainer
         center={KAMPALA}
         zoom={13}
         scrollWheelZoom
-        style={{ height: "100%", width: "100%", background: "var(--bg-hover)" }}
+        style={{ height: "100%", width: "100%" }}
       >
-        <TileLayer
-          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-        />
-        <FitBounds points={points} />
+        <BaseTiles />
+        <MapReady points={points} />
 
         {activeRiders.map((r) => (
           <Marker
@@ -187,7 +209,7 @@ export function TrackMap({
 
   return (
     <div
-      style={{ height, width: "100%" }}
+      style={{ height, width: "100%", position: "relative" }}
       className="overflow-hidden border border-border"
     >
       <MapContainer
@@ -196,11 +218,8 @@ export function TrackMap({
         scrollWheelZoom={false}
         style={{ height: "100%", width: "100%" }}
       >
-        <TileLayer
-          attribution="&copy; OpenStreetMap"
-          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-        />
-        <FitBounds points={points} />
+        <BaseTiles />
+        <MapReady points={points} />
         {riderLat != null && riderLng != null && (
           <Marker position={[riderLat, riderLng]} icon={riderIcon("#f97316")}>
             <Popup>{riderName ?? "Rider"}</Popup>

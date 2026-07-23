@@ -22,7 +22,7 @@ export default function LiveMapPage() {
             Live Map
           </h1>
           <p className="mt-1 text-sm text-text-muted">
-            OpenStreetMap · rider GPS and active delivery dropoffs in Kampala
+            Live street map · rider GPS and active delivery dropoffs in Kampala
           </p>
         </div>
         <div className="flex items-center gap-2 text-xs text-text-muted">
@@ -42,7 +42,7 @@ export default function LiveMapPage() {
             height={520}
           />
           <div className="pointer-events-none absolute bottom-3 left-3 border border-border bg-bg/90 px-3 py-2 text-[11px] text-text-muted backdrop-blur">
-            OpenStreetMap · live demo positions
+            CARTO · OpenStreetMap data · live demo positions
           </div>
         </div>
 

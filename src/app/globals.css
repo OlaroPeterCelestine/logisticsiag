@@ -122,15 +122,59 @@ body {
 
 .leaflet-container {
   font-family: inherit;
+  width: 100%;
+  height: 100%;
   z-index: 0;
+  background: #d4d4d8;
 }
 
-.leaflet-pane,
-.leaflet-top,
-.leaflet-bottom {
-  z-index: 0;
+html.dark .leaflet-container {
+  background: #18181b;
+}
+
+/* Keep Leaflet's native pane stacking so tiles render under markers */
+.leaflet-tile-pane {
+  z-index: 200 !important;
+}
+
+.leaflet-overlay-pane {
+  z-index: 400 !important;
+}
+
+.leaflet-marker-pane {
+  z-index: 600 !important;
+}
+
+.leaflet-tooltip-pane {
+  z-index: 650 !important;
+}
+
+.leaflet-popup-pane {
+  z-index: 700 !important;
 }
 
 .leaflet-control-attribution {
   font-size: 10px;
+  background: rgba(255, 255, 255, 0.85) !important;
+}
+
+html.dark .leaflet-control-attribution {
+  background: rgba(0, 0, 0, 0.65) !important;
+  color: #e5e5e5;
+}
+
+html.dark .leaflet-control-attribution a {
+  color: #fdba74;
+}
+
+.leaflet-control-zoom a {
+  background: #fff !important;
+  color: #18181b !important;
+  border-color: #e4e4e7 !important;
+}
+
+html.dark .leaflet-control-zoom a {
+  background: #18181b !important;
+  color: #fafafa !important;
+  border-color: #3f3f46 !important;
 }
