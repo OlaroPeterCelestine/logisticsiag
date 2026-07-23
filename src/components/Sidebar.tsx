@@ -59,7 +59,7 @@ export function Sidebar() {
         </div>
         <div>
           <div className="text-[15px] font-semibold tracking-wide text-text">
-            HAULA
+            IAG
           </div>
           <div className="text-[11px] text-text-muted">Last-mile delivery</div>
         </div>
@@ -144,10 +144,20 @@ export function Sidebar() {
           </div>
           <div className="min-w-0 flex-1">
             <div className="truncate text-xs font-medium text-text">
-              admin@haula.local
+              admin@iag.local
             </div>
             <div className="text-[10px] text-text-muted">Dispatcher</div>
           </div>
+          <button
+            type="button"
+            onClick={() => {
+              localStorage.removeItem("iag-admin-auth");
+              window.location.href = "/login";
+            }}
+            className="rounded-lg border border-border px-2 py-1 text-[10px] font-medium text-text-muted transition hover:text-text"
+          >
+            Sign out
+          </button>
         </div>
       </div>
     </aside>

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { ThemeProvider } from "@/components/ThemeProvider";
+import { AuthGate } from "@/components/AuthGate";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -46,7 +47,9 @@ export default function RootLayout({
         <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
       </head>
       <body className="min-h-full bg-bg text-text">
-        <ThemeProvider>{children}</ThemeProvider>
+        <ThemeProvider>
+          <AuthGate>{children}</AuthGate>
+        </ThemeProvider>
       </body>
     </html>
   );
